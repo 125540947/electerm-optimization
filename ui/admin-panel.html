@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>electerm-sync 管理面板</title>
+  <style>
+    :root {
+      --bg: #1a1d23;
+      --bg-secondary: #22262e;
+      --accent: #4dabf7;
+      --text: #e8eaed;
+      --text-secondary: #9aa0a6;
+      --success: #51cf66;
+      --danger: #ff6b6b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .header h1 { font-size: 24px; }
+    .header .status { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .card { background: var(--bg-secondary); border-radius: 12px; padding: 20px; }
+    .card h2 { font-size: 16px; margin-bottom: 16px; color: var(--text-secondary); }
+    
+    .stat { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #333; }
+    .stat:last-child { border: none; }
+    .stat-value { font-weight: 600; color: var(--accent); }
+    
+    .btn { padding: 10px 20px; background: var(--accent); border: none; border-radius: 6px; color: #fff; cursor: pointer; }
+    .btn:hover { opacity: 0.9; }
+    .btn-danger { background: var(--danger); }
+    
+    .log-list { max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    .log-item { padding: 8px; border-bottom: 1px solid #333; }
+    .log-time { color: var(--text-secondary); }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); }
+    .form-group input { width: 100%; padding: 10px; background: #2a2f38; border: 1px solid #333; border-radius: 6px; color: var(--text); }
+    
+    .user-list { max-height: 200px; overflow-y: auto; }
+    .user-item { display: flex; justify-content: space-between; padding: 10px; background: #2a2f38; margin-bottom: 8px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚡ electerm-sync 管理面板</h1>
+      <div class="status">
+        <div class="status-dot"></div>
+        <span>在线</span>
+      </div>
+    </div>
+    
+    <div class="grid">
+      <div class="card">
+        <h2>📊 服务器状态</h2>
+        <div id="stats">
+          <div class="stat"><span>运行时间</span><span class="stat-value" id="uptime">-</span></div>
+          <div class="stat"><span>内存使用</span><span class="stat-value" id="memory">-</span></div>
+          <div class="stat"><span>用户数</span><span class="stat-value" id="users">-</span></div>
+          <div class="stat"><span>数据文件</span><span class="stat-value" id="files">-</span></div>
+        </div>
+        <button class="btn" onclick="loadStats()" style="margin-top: 16px;">🔄 刷新</button>
+      </div>
+      
+      <div class="card">
+        <h2>👥 用户管理</h2>
+        <div class="user-list" id="userList"></div>
+      </div>
+      
+      <div class="card">
+        <h2>➕ 添加用户</h2>
+        <div class="form-group">
+          <label>用户名</label>
+          <input type="text" id="newUser" placeholder="输入用户名">
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" id="newPass" placeholder="输入密码">
+        </div>
+        <button class="btn" onclick="addUser()">创建用户</button>
+      </div>
+      
+      <div class="card">
+        <h2>📝 系统日志</h2>
+        <div class="log-list" id="logList">
+          <div class="log-item">加载日志...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://82.158.225.97:3000';
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = 'czfkKUGS9741';
+    
+    // 获取 Admin Token
+    async function getAdminToken() {
+      const res = await fetch(`${API}/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: ADMIN_USER, password: ADMIN_PASS })
+      });
+      const data = await res.json();
+      return data.token;
+    }
+    
+    // 加载统计
+    async function loadStats() {
+      try {
+        const token = await getAdminToken();
+        const res = await fetch(`${API}/api/admin/stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const stats = await res.json();
+        
+        document.getElementById('uptime').textContent = Math.floor(stats.uptime / 60) + ' 分钟';
+        document.getElementById('memory').textContent = (stats.memory.rss / 1024 / 1024).toFixed(0) + ' MB';
+        document.getElementById('users').textContent = stats.users || 0;
+        document.getElementById('files').textContent = stats.dataFiles || 0;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    // 加载用户
+    async function loadUsers() {
+      try {
+        const token = await getAdminToken();
+        const res = await fetch(`${API}/api/admin/users`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Authorization-Basic': btoa(`${ADMIN_USER}:${ADMIN_PASS}`)
+          }
+        });
+        const users = await res.json();
+        
+        const list = document.getElementById('userList');
+        list.innerHTML = users.map(u => `
+          <div class="user-item">
+            <span>${u.id}</span>
+            <span style="color: var(--text-secondary)">${new Date(u.created).toLocaleDateString()}</span>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    // 添加用户
+    async function addUser() {
+      const user = document.getElementById('newUser').value;
+      const pass = document.getElementById('newPass').value;
+      
+      if (!user || !pass) return alert('请输入用户名和密码');
+      
+      const res = await fetch(`${API}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user, password: pass })
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        alert('用户创建成功!');
+        loadUsers();
+      } else {
+        alert(data.error || '创建失败');
+      }
+    }
+    
+    // 加载日志
+    function loadLogs() {
+      const list = document.getElementById('logList');
+      list.innerHTML = `
+        <div class="log-item"><span class="log-time">${new Date().toLocaleString()}</span> 系统启动</div>
+        <div class="log-item"><span class="log-time">${new Date().toLocaleString()}</span> 服务运行中</div>
+      `;
+    }
+    
+    // 初始化
+    loadStats();
+    loadUsers();
+    loadLogs();
+    
+    // 每30秒刷新
+    setInterval(loadStats, 30000);
+  </script>
+</body>
+</html>
