@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # electerm-web 前端
+  electerm-web:
+    build: .
+    container_name: electerm-web
+    restart: unless-stopped
+    ports:
+      - "5580:5580"
+    environment:
+      - NODE_ENV=production
+      - PORT=5580
+      - DB_PATH=/data/electerm
+      - SERVER_SECRET=${SERVER_SECRET}
+    volumes:
+      - electerm-data:/data/electerm
+    networks:
+      - electerm-net
+    depends_on:
+      - electerm-sync
+
+  # electerm-sync 同步服务
+  electerm-sync:
+    image: node:22-alpine
+    container_name: electerm-sync
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATA_DIR=/data/sync
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - sync-data:/data/sync
+    networks:
+      - electerm-net
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: electerm-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - electerm-net
+    depends_on:
+      - electerm-web
+      - electerm-sync
+
+volumes:
+  electerm-data:
+  sync-data:
+
+networks:
+  electerm-net:
+    driver: bridge
