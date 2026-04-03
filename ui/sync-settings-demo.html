@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>electerm-web 同步设置</title>
+  <link rel="stylesheet" href="modern-theme.css">
+  <style>
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .settings-page {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .settings-header {
+      margin-bottom: 24px;
+    }
+    .settings-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .settings-subtitle {
+      color: var(--text-secondary);
+    }
+    .settings-section {
+      margin-bottom: 32px;
+    }
+    .settings-section-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sync-preview {
+      margin-top: 20px;
+    }
+    .sync-status-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+    }
+    .sync-status-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .sync-status-icon.connected {
+      background: rgba(166, 227, 161, 0.2);
+      color: var(--accent-green);
+    }
+    .sync-status-icon.disconnected {
+      background: rgba(243, 139, 168, 0.2);
+      color: var(--accent-red);
+    }
+    .sync-status-info {
+      flex: 1;
+    }
+    .sync-status-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .sync-status-detail {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .quick-action-card {
+      padding: 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .quick-action-card:hover {
+      border-color: var(--accent-blue);
+      background: var(--bg-tertiary);
+    }
+    .quick-action-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .quick-action-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .quick-action-desc {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span>⚡</span>
+          <span>electerm</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">连接</div>
+          <div class="nav-item active">
+            <span class="nav-item-icon">📡</span>
+            <span>终端</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-item-icon">📁</span>
+            <span>文件</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-item-icon">📑</span>
+            <span>书签</span>
+          </div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">设置</div>
+          <div class="nav-item">
+            <span class="nav-item-icon">⚙️</span>
+            <span>偏好设置</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-item-icon">🔄</span>
+            <span>数据同步</span>
+          </div>
+          <div class="nav-item">
+            <span class="nav-item-icon">🎨</span>
+            <span>主题</span>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- 主内容 -->
+    <main class="main-content">
+      <div class="settings-page">
+        <div class="settings-header">
+          <h1 class="settings-title">⚡ 数据同步</h1>
+          <p class="settings-subtitle">同步您的书签、主题、快捷命令和设置</p>
+        </div>
+
+        <!-- 同步状态 -->
+        <div class="settings-section">
+          <h2 class="settings-section-title">📊 同步状态</h2>
+          <div class="sync-preview">
+            <div class="sync-status-card">
+              <div class="sync-status-icon disconnected" id="syncStatusIcon">⚠️</div>
+              <div class="sync-status-info">
+                <div class="sync-status-title" id="syncStatusTitle">未连接</div>
+                <div class="sync-status-detail" id="syncStatusDetail">点击配置同步方式</div>
+              </div>
+              <button class="btn btn-primary" onclick="openSyncModal()">配置同步</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 同步方式 -->
+        <div class="settings-section">
+          <h2 class="settings-section-title">🔗 同步方式</h2>
+          <div class="quick-actions">
+            <div class="quick-action-card" onclick="selectProvider('webdav')">
+              <div class="quick-action-icon">☁️</div>
+              <div class="quick-action-title">WebDAV</div>
+              <div class="quick-action-desc">使用网盘同步 (坚果云/Nextcloud/阿里云盘)</div>
+            </div>
+            <div class="quick-action-card" onclick="selectProvider('custom')">
+              <div class="quick-action-icon">🖥️</div>
+              <div class="quick-action-title">自定义服务器</div>
+              <div class="quick-action-desc">自建 VPS 同步服务</div>
+            </div>
+            <div class="quick-action-card" onclick="selectProvider('github')">
+              <div class="quick-action-icon">🐙</div>
+              <div class="quick-action-title">GitHub Gist</div>
+              <div class="quick-action-desc">同步到 GitHub 私有 Gist</div>
+            </div>
+            <div class="quick-action-card" onclick="selectProvider('gitee')">
+              <div class="quick-action-icon">🐱</div>
+              <div class="quick-action-title">Gitee</div>
+              <div class="quick-action-desc">同步到 Gitee 私有 Gist</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 同步内容 -->
+        <div class="settings-section">
+          <h2 class="settings-section-title">📦 同步内容</h2>
+          <div class="card">
+            <div class="card-body">
+              <label class="flex items-center gap-3 mb-3">
+                <input type="checkbox" checked>
+                <span>书签 (Bookmarks)</span>
+              </label>
+              <label class="flex items-center gap-3 mb-3">
+                <input type="checkbox" checked>
+                <span>主题 (Themes)</span>
+              </label>
+              <label class="flex items-center gap-3 mb-3">
+                <input type="checkbox" checked>
+                <span>快捷命令 (Quick Commands)</span>
+              </label>
+              <label class="flex items-center gap-3 mb-3">
+                <input type="checkbox" checked>
+                <span>设置 (Settings)</span>
+              </label>
+              <label class="flex items-center gap-3">
+                <input type="checkbox">
+                <span>终端历史 (Terminal History)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 自动同步 -->
+        <div class="settings-section">
+          <h2 class="settings-section-title">⏰ 自动同步</h2>
+          <div class="card">
+            <div class="card-body">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <div class="font-bold">启用自动同步</div>
+                  <div class="text-sm text-secondary">在后台自动同步数据</div>
+                </div>
+                <div class="toggle active" id="autoSyncToggle" onclick="toggleAutoSync()"></div>
+              </div>
+              <div class="input-group">
+                <label class="input-label">同步间隔</label>
+                <select class="input select">
+                  <option value="60000">1 分钟</option>
+                  <option value="300000" selected>5 分钟</option>
+                  <option value="600000">10 分钟</option>
+                  <option value="1800000">30 分钟</option>
+                  <option value="3600000">1 小时</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 状态栏 -->
+      <div class="status-bar">
+        <div class="status-bar-item">
+          <span>⚡</span>
+          <span>electerm-web</span>
+        </div>
+        <div class="status-bar-item">
+          <span>📶</span>
+          <span>已连接</span>
+        </div>
+        <div class="status-bar-item">
+          <span>🕐</span>
+          <span>最后同步: 2026-04-03 08:00</span>
+        </div>
+        <div style="flex: 1;"></div>
+        <div class="status-bar-item">
+          <span>🔥</span>
+          <span>v3.0.0</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 同步配置模态框 -->
+  <div class="modal-overlay" id="syncModal" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">配置 WebDAV 同步</h3>
+        <button class="btn btn-ghost btn-icon" onclick="closeSyncModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="webdavConfig" class="input-group mb-4">
+          <label class="input-label">WebDAV URL</label>
+          <input type="text" class="input" id="webdavUrl" placeholder="https://dav.jianguoyun.com/dav/">
+        </div>
+        <div id="webdavUser" class="input-group mb-4">
+          <label class="input-label">用户名</label>
+          <input type="text" class="input" id="webdavUsername" placeholder="your-username">
+        </div>
+        <div id="webdavPass" class="input-group mb-4">
+          <label class="input-label">密码</label>
+          <input type="password" class="input" id="webdavPassword" placeholder="••••••••">
+        </div>
+        
+        <div id="customConfig" class="hidden">
+          <div class="input-group mb-4">
+            <label class="input-label">服务器地址</label>
+            <input type="text" class="input" id="customUrl" placeholder="https://your-server.com">
+          </div>
+          <div class="input-group mb-4">
+            <label class="input-label">User ID</label>
+            <input type="text" class="input" id="customUserId" placeholder="your-user-id">
+          </div>
+          <div class="input-group mb-4">
+            <label class="input-label">Token</label>
+            <input type="password" class="input" id="customToken" placeholder="••••••••">
+          </div>
+        </div>
+        
+        <div id="gistConfig" class="hidden">
+          <div class="input-group mb-4">
+            <label class="input-label">Gist ID</label>
+            <input type="text" class="input" id="gistId" placeholder="your-gist-id">
+          </div>
+          <div class="input-group mb-4">
+            <label class="input-label">Access Token</label>
+            <input type="password" class="input" id="gistToken" placeholder="••••••••">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="testConnection()">测试连接</button>
+        <button class="btn btn-primary" onclick="saveConfig()">保存并同步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // 当前选中的 provider
+    let currentProvider = null;
+
+    // 打开同步模态框
+    function openSyncModal() {
+      document.getElementById('syncModal').style.display = 'flex';
+    }
+
+    // 关闭同步模态框
+    function closeSyncModal() {
+      document.getElementById('syncModal').style.display = 'none';
+    }
+
+    // 选择同步方式
+    function selectProvider(provider) {
+      currentProvider = provider;
+      
+      // 隐藏所有配置
+      document.getElementById('webdavConfig').classList.add('hidden');
+      document.getElementById('webdavUser').classList.add('hidden');
+      document.getElementById('webdavPass').classList.add('hidden');
+      document.getElementById('customConfig').classList.add('hidden');
+      document.getElementById('gistConfig').classList.add('hidden');
+      
+      // 显示对应配置
+      switch (provider) {
+        case 'webdav':
+          document.getElementById('modalTitle').textContent = '配置 WebDAV 同步';
+          document.getElementById('webdavConfig').classList.remove('hidden');
+          document.getElementById('webdavUser').classList.remove('hidden');
+          document.getElementById('webdavPass').classList.remove('hidden');
+          break;
+        case 'custom':
+          document.getElementById('modalTitle').textContent = '配置自定义服务器';
+          document.getElementById('customConfig').classList.remove('hidden');
+          break;
+        case 'github':
+        case 'gitee':
+          document.getElementById('modalTitle').textContent = `配置 ${provider === 'github' ? 'GitHub' : 'Gitee'} Gist`;
+          document.getElementById('gistConfig').classList.remove('hidden');
+          break;
+      }
+      
+      openSyncModal();
+    }
+
+    // 测试连接
+    async function testConnection() {
+      showToast('正在测试连接...', 'info');
+      
+      // 模拟测试
+      setTimeout(() => {
+        showToast('连接测试成功! ✓', 'success');
+        updateSyncStatus(true);
+      }, 1500);
+    }
+
+    // 保存配置
+    function saveConfig() {
+      showToast('配置已保存', 'success');
+      updateSyncStatus(true);
+      closeSyncModal();
+    }
+
+    // 更新同步状态
+    function updateSyncStatus(connected) {
+      const icon = document.getElementById('syncStatusIcon');
+      const title = document.getElementById('syncStatusTitle');
+      const detail = document.getElementById('syncStatusDetail');
+      
+      if (connected) {
+        icon.className = 'sync-status-icon connected';
+        icon.textContent = '✓';
+        title.textContent = '已连接';
+        detail.textContent = `${currentProvider?.toUpperCase()} - 最后同步: 刚刚`;
+      } else {
+        icon.className = 'sync-status-icon disconnected';
+        icon.textContent = '⚠️';
+        title.textContent = '未连接';
+        detail.textContent = '点击配置同步方式';
+      }
+    }
+
+    // 切换自动同步
+    function toggleAutoSync() {
+      const toggle = document.getElementById('autoSyncToggle');
+      toggle.classList.toggle('active');
+      showToast(toggle.classList.contains('active') ? '自动同步已开启' : '自动同步已关闭', 'info');
+    }
+
+    // 显示 Toast
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = `
+        <span>${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ️'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('electerm-sync UI initialized');
+    });
+  </script>
+</body>
+</html>
