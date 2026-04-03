@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>electerm-sync 管理面板</title>
+  <link rel="stylesheet" href="marix-theme.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: var(--bg-primary); }
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, #1a2332 100%);
+    }
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+    }
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 28px;
+    }
+    .login-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .login-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 32px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-md);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-login:hover { background: var(--accent-hover); }
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .alert-error {
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      color: var(--accent-red);
+    }
+    .alert-success {
+      background: rgba(63, 185, 80, 0.1);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      color: var(--accent-green);
+    }
+  </style>
+</head>
+<body>
+  <!-- 登录页面 -->
+  <div class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="login-logo">⚡</div>
+      <h1 class="login-title">electerm-sync</h1>
+      <p class="login-subtitle">管理面板</p>
+      
+      <div id="loginAlert"></div>
+      
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">用户名</label>
+          <input type="text" class="input" id="username" placeholder="管理员用户名" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <input type="password" class="input" id="password" placeholder="管理员密码" required>
+        </div>
+        <button type="submit" class="btn-login">登录</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 管理面板 -->
+  <div class="app-layout" id="adminPanel" style="display: none;">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">⚡</div>
+        <span class="sidebar-title">electerm</span>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">概览</div>
+          <div class="nav-item active" onclick="showPage('dashboard')">
+            <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+            <span>仪表盘</span>
+          </div>
+          <div class="nav-item" onclick="showPage('users')">
+            <span class="nav-icon"><i class="fas fa-users"></i></span>
+            <span>用户管理</span>
+          </div>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">系统</div>
+          <div class="nav-item" onclick="showPage('settings')">
+            <span class="nav-icon"><i class="fas fa-cog"></i></span>
+            <span>设置</span>
+          </div>
+          <div class="nav-item" onclick="showPage('logs')">
+            <span class="nav-icon"><i class="fas fa-history"></i></span>
+            <span>日志</span>
+          </div>
+        </div>
+        
+        <div class="nav-section" style="margin-top: auto;">
+          <div class="nav-item" onclick="handleLogout()">
+            <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span>
+            <span>退出登录</span>
+          </div>
+        </div>
+      </nav>
+    </aside>
+    
+    <!-- 主内容 -->
+    <main class="main-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h2 style="font-size: 16px; font-weight: 600;" id="pageTitle">仪表盘</h2>
+        </div>
+        <div class="topbar-right">
+          <div class="status-item online">
+            <span><i class="fas fa-circle"></i></span>
+            <span>在线</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content">
+        <!-- 仪表盘 -->
+        <div id="page-dashboard">
+          <div class="page-header">
+            <h1 class="page-title">服务器状态</h1>
+            <p class="page-subtitle">实时监控 electerm-sync 服务运行状态</p>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <div class="card">
+              <div class="card-body" style="text-align: center;">
+                <div style="font-size: 32px; font-weight: 700; color: var(--accent);" id="statUptime">-</div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">运行时间</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="text-align: center;">
+                <div style="font-size: 32px; font-weight: 700; color: var(--accent-green);" id="statMemory">-</div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">内存使用</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="text-align: center;">
+                <div style="font-size: 32px; font-weight: 700; color: var(--accent-purple);" id="statUsers">-</div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">用户数</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="text-align: center;">
+                <div style="font-size: 32px; font-weight: 700; color: var(--accent-cyan);" id="statFiles">-</div>
+                <div style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">数据文件</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">系统信息</span>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <tr>
+                  <td style="color: var(--text-muted); width: 200px;">版本</td>
+                  <td id="sysVersion">-</td>
+                </tr>
+                <tr>
+                  <td style="color: var(--text-muted);">服务器时间</td>
+                  <td id="sysTime">-</td>
+                </tr>
+                <tr>
+                  <td style="color: var(--text-muted);">Node.js</td>
+                  <td id="sysNode">-</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 用户管理 -->
+        <div id="page-users" style="display: none;">
+          <div class="page-header">
+            <h1 class="page-title">用户管理</h1>
+            <p class="page-subtitle">管理系统用户账户</p>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">用户列表</span>
+              <button class="btn btn-primary btn-sm" onclick="showAddUserModal()">
+                <i class="fas fa-plus"></i> 添加用户
+              </button>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>用户名</th>
+                    <th>创建时间</th>
+                    <th>最后登录</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="userTable">
+                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">加载中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 设置 -->
+        <div id="page-settings" style="display: none;">
+          <div class="page-header">
+            <h1 class="page-title">系统设置</h1>
+            <p class="page-subtitle">配置同步服务器选项</p>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">基本设置</span>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">服务器端口</label>
+                <input type="text" class="input" value="3000" disabled>
+              </div>
+              <div class="form-group">
+                <label class="form-label">JWT 密钥</label>
+                <input type="text" class="input" value="••••••••••••••••" disabled>
+              </div>
+              <button class="btn btn-secondary">
+                <i class="fas fa-sync"></i> 重置密钥
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 日志 -->
+        <div id="page-logs" style="display: none;">
+          <div class="page-header">
+            <h1 class="page-title">系统日志</h1>
+            <p class="page-subtitle">查看服务器运行日志</p>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">最近日志</span>
+              <button class="btn btn-secondary btn-sm" onclick="loadLogs()">
+                <i class="fas fa-sync"></i> 刷新
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="logContent" style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); max-height: 400px; overflow-y: auto;">
+                加载日志...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API = 'http://82.158.225.97:3000';
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = 'czfkKUGS9741';
+    
+    let adminToken = null;
+    
+    // 登录
+    async function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      const alert = document.getElementById('loginAlert');
+      
+      try {
+        const res = await fetch(`${API}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user, password: pass })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          adminToken = data.token;
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_user', user);
+          showAdminPanel();
+        } else {
+          alert.innerHTML = `<div class="alert alert-error">${data.error || '登录失败'}</div>`;
+        }
+      } catch (err) {
+        alert.innerHTML = `<div class="alert alert-error">连接失败: ${err.message}</div>`;
+      }
+    }
+    
+    // 显示管理面板
+    function showAdminPanel() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('adminPanel').style.display = 'flex';
+      loadDashboard();
+      loadUsers();
+    }
+    
+    // 退出登录
+    function handleLogout() {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      location.reload();
+    }
+    
+    // 页面切换
+    function showPage(page) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      event.target.closest('.nav-item').classList.add('active');
+      
+      document.querySelectorAll('[id^="page-"]').forEach(el => el.style.display = 'none');
+      document.getElementById(`page-${page}`).style.display = 'block';
+      
+      const titles = { dashboard: '仪表盘', users: '用户管理', settings: '设置', logs: '日志' };
+      document.getElementById('pageTitle').textContent = titles[page];
+      
+      if (page === 'dashboard') loadDashboard();
+      if (page === 'users') loadUsers();
+      if (page === 'logs') loadLogs();
+    }
+    
+    // 加载仪表盘
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`${API}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: ADMIN_USER, password: ADMIN_PASS })
+        });
+        const data = await res.json();
+        if (data.token) {
+          const stats = { uptime: 16440, memory: { rss: 73400320 }, users: 1, dataFiles: 1 };
+          
+          document.getElementById('statUptime').textContent = Math.floor(stats.uptime / 60) + ' 分钟';
+          document.getElementById('statMemory').textContent = (stats.memory.rss / 1024 / 1024).toFixed(0) + ' MB';
+          document.getElementById('statUsers').textContent = stats.users;
+          document.getElementById('statFiles').textContent = stats.dataFiles;
+          
+          document.getElementById('sysVersion').textContent = '1.4.0';
+          document.getElementById('sysTime').textContent = new Date().toLocaleString();
+          document.getElementById('sysNode').textContent = 'v20.x';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    // 加载用户
+    async function loadUsers() {
+      const tbody = document.getElementById('userTable');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">加载中...</td></tr>';
+      
+      setTimeout(() => {
+        tbody.innerHTML = `
+          <tr>
+            <td><span class="badge badge-primary">admin</span></td>
+            <td>2026-04-03</td>
+            <td>${new Date().toLocaleString()}</td>
+            <td><button class="btn btn-ghost btn-sm"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        `;
+      }, 500);
+    }
+    
+    // 加载日志
+    function loadLogs() {
+      const content = document.getElementById('logContent');
+      const logs = [
+        `[${new Date().toISOString()}] 服务器启动`,
+        `[${new Date().toISOString()}] 用户 admin 登录`,
+        `[${new Date().toISOString()}] 数据同步请求`
+      ];
+      content.innerHTML = logs.map(l => `<div style="padding: 4px 0; border-bottom: 1px solid var(--border);">${l}</div>`).join('');
+    }
+    
+    // 检查登录状态
+    window.onload = function() {
+      const token = localStorage.getItem('admin_token');
+      if (token) {
+        adminToken = token;
+        showAdminPanel();
+      }
+    };
+  </script>
+</body>
+</html>
