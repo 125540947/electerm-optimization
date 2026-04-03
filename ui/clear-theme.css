@@ -1,0 +1,427 @@
+/**
+ * electerm-web 简洁清晰风格主题
+ * 清晰、直观、易用
+ */
+
+/* ==================== 基础色调 ==================== */
+:root {
+  /* 主背景 - 深灰蓝 */
+  --bg-main: #1a1d23;
+  --bg-secondary: #22262e;
+  --bg-tertiary: #2a2f38;
+  --bg-hover: #323840;
+  
+  /* 文字 */
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --text-muted: #5f6368;
+  
+  /* 强调色 - 清新蓝 */
+  --accent-primary: #4dabf7;
+  --accent-success: #51cf66;
+  --accent-warning: #ffd43b;
+  --accent-danger: #ff6b6b;
+  
+  /* 边框 */
+  --border-color: #3c4043;
+  --border-light: #4d5156;
+  
+  /* 终端 */
+  --terminal-bg: #0d1117;
+  --terminal-fg: #c9d1d9;
+  
+  /* 阴影 */
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ==================== 整体布局 ==================== */
+body {
+  background: var(--bg-main) !important;
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+/* 侧边栏 */
+.ant-layout-sider {
+  background: var(--bg-secondary) !important;
+}
+
+.ant-menu {
+  background: transparent !important;
+}
+
+.ant-menu-item {
+  color: var(--text-secondary) !important;
+}
+
+.ant-menu-item:hover {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.ant-menu-item-selected {
+  background: rgba(77, 171, 247, 0.15) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* ==================== 按钮 ==================== */
+.ant-btn {
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+}
+
+.ant-btn-primary {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+}
+
+.ant-btn-primary:hover {
+  background: #3b8fd9 !important;
+  border-color: #3b8fd9 !important;
+}
+
+/* ==================== 输入框 ==================== */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2) !important;
+}
+
+.ant-input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* ==================== 卡片 ==================== */
+.ant-card {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+  border-radius: 8px !important;
+}
+
+.ant-card-head {
+  border-bottom-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ==================== 标签页 ==================== */
+.ant-tabs-tab {
+  color: var(--text-secondary) !important;
+}
+
+.ant-tabs-tab:hover {
+  color: var(--text-primary) !important;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--accent-primary) !important;
+}
+
+.ant-tabs-ink-bar {
+  background: var(--accent-primary) !important;
+}
+
+/* ==================== 表格 ==================== */
+.ant-table {
+  background: var(--bg-secondary) !important;
+}
+
+.ant-table-thead > tr > th {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom-color: var(--border-color) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--bg-tertiary) !important;
+}
+
+/* ==================== 模态框 ==================== */
+.ant-modal-content {
+  background: var(--bg-secondary) !important;
+  border-radius: 12px !important;
+}
+
+.ant-modal-header {
+  background: transparent !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+.ant-modal-title {
+  color: var(--text-primary) !important;
+}
+
+.ant-modal-close-x {
+  color: var(--text-secondary) !important;
+}
+
+/* ==================== 终端区域 ==================== */
+.xterm {
+  background: var(--terminal-bg) !important;
+}
+
+.xterm-viewport {
+  background: var(--terminal-bg) !important;
+}
+
+/* ==================== 状态栏 ==================== */
+.status-bar,
+.ant-footer {
+  background: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* ==================== 图标和徽章 ==================== */
+.ant-badge-status-success {
+  background: var(--accent-success) !important;
+}
+
+.ant-badge-status-error {
+  background: var(--accent-danger) !important;
+}
+
+/* ==================== 滚动条 ==================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ==================== 登录页 ==================== */
+.login-container {
+  background: linear-gradient(135deg, var(--bg-main) 0%, #1e3a5f 100%) !important;
+}
+
+.login-card {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ==================== 工具提示 ==================== */
+.ant-tooltip-inner {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ==================== 下拉菜单 ==================== */
+.ant-dropdown-menu {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.ant-dropdown-menu-item {
+  color: var(--text-secondary) !important;
+}
+
+.ant-dropdown-menu-item:hover {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ==================== 开关 ==================== */
+.ant-switch {
+  background: var(--bg-tertiary) !important;
+}
+
+.ant-switch-checked {
+  background: var(--accent-primary) !important;
+}
+
+/* ==================== 复选框 ==================== */
+.ant-checkbox-wrapper {
+  color: var(--text-secondary) !important;
+}
+
+.ant-checkbox-inner {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;
+}
+
+/* ==================== 空状态 ==================== */
+.ant-empty-description {
+  color: var(--text-muted) !important;
+}
+
+/* ==================== 加载中 ==================== */
+.ant-spin-text {
+  color: var(--text-secondary) !important;
+}
+
+/* ==================== 标签 ==================== */
+.ant-tag {
+  border-radius: 4px !important;
+}
+
+/* ==================== 分割线 ==================== */
+.ant-divider {
+  border-top-color: var(--border-color) !important;
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    position: fixed !important;
+    z-index: 100;
+  }
+}
+
+/* ==================== 动画 ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ant-card {
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== 简洁头部样式 ==================== */
+.header-bar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ==================== 快速连接卡片 ==================== */
+.quick-connect-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.quick-connect-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.quick-connect-input {
+  display: flex;
+  gap: 8px;
+}
+
+/* ==================== 连接列表 ==================== */
+.connection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.connection-item {
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.connection-item:hover {
+  background: var(--bg-hover);
+  transform: translateX(4px);
+}
+
+.connection-item.active {
+  border-left: 3px solid var(--accent-primary);
+}
+
+.connection-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.connection-info {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ==================== 终端标签 ==================== */
+.terminal-tab {
+  background: var(--bg-tertiary);
+  border-radius: 6px 6px 0 0;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.terminal-tab.active {
+  background: var(--terminal-bg);
+  border-bottom: 2px solid var(--accent-primary);
+}
+
+/* ==================== 底部状态栏 ==================== */
+.footer-status {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-item.online {
+  color: var(--accent-success);
+}
