@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README 文档更新 - 添加新功能说明和使用示例
 - 管理后台连接 - 直接使用服务器 API
 
+## [1.5.3] - 2026-04-04
+
+### Added
+- 新增项目对比分析文档 (`docs/COMPARISON.md`) - 对比 electerm-optimization vs Marix
+- 详细的功能、安全、部署、适用场景对比
+
 ### Added
 - New server version with API v1.5.0 (`server/server-v1.5.js`)
 - Data export/import API endpoints (`/api/export`, `/api/import`)
