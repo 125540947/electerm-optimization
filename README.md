@@ -1,6 +1,6 @@
 # electerm-optimization
 
-> electerm-web 优化项目 - 包含 WebDAV 同步、自定义服务器同步、现代 UI 主题
+> electerm-web 优化项目 - 包含 WebDAV 同步、自定义服务器同步、现代 UI 主题、远程桌面
 
 [![GitHub stars](https://img.shields.io/github/stars/125540947/electerm-optimization)](https://github.com/125540947/electerm-optimization)
 [![License](https://img.shields.io/github/license/125540947/electerm-optimization)](LICENSE)
@@ -14,6 +14,7 @@
 - **冲突自动解决** - 多种策略可选
 - **离线缓存** - 网络不佳时自动缓存
 - **数据导出/导入** - 支持备份和迁移
+- **操作日志** - 审计追踪
 
 ### 🎨 UI 优化
 - **现代深色主题** - Catppuccin Mocha 风格
@@ -21,42 +22,35 @@
 - **深色/浅色模式** - 跟随系统或手动切换
 - **管理后台** - 实时监控面板
 
-### 🛠️ 高级功能
+### 🖥️ 远程桌面
+- **RDP 远程桌面** - Windows/Linux 远程控制
+- **VNC 远程桌面** - Linux/macOS 远程控制
+- **键盘/鼠标事件** - 完整远程控制
+- **剪贴板共享** - 跨设备复制粘贴
+
+### 🛠️ 开发工具
+- **代码编辑器** - 语法高亮、多语言支持
+- **文件管理器** - 双面板、压缩解压、权限修改
+- **数据库客户端** - MySQL/PostgreSQL/MongoDB/Redis
+- **网络诊断工具** - DNS/Ping/端口检测
+- **框架安装器** - Laravel/WordPress/Express 等
+
+### 🛡️ 高级功能
 - **速率限制** - 防止 API 滥用
 - **Gzip 压缩** - 减少传输体积 70%
 - **内存缓存** - 提升响应速度
-- **操作日志** - 审计追踪
 - **健康检查** - 自动告警和恢复
+- **备份脚本** - 自动数据备份
 
 ## 快速开始
 
 ### 一键部署 (推荐)
 
 ```bash
-# 克隆项目
 git clone https://github.com/125540947/electerm-optimization.git
 cd electerm-optimization/scripts
-
-# 运行部署脚本
 chmod +x deploy-enhanced.sh
 ./deploy-enhanced.sh
-```
-
-### 手动部署
-
-```bash
-# 1. 安装依赖
-apt-get update && apt-get install -y nodejs npm nginx git
-
-# 2. 部署同步服务
-cd /opt/electerm-sync
-npm install express jsonwebtoken basic-auth cors compression uuid
-pm2 start server.js --name electerm-sync
-
-# 3. 部署 Web 服务
-cd /opt/electerm-web
-npm install && npm run build
-pm2 start "node src/app/app.js" --name electerm-web
 ```
 
 ## 项目结构
@@ -77,103 +71,30 @@ electerm-optimization/
 │   └── encryption.js       # 加密模块
 ├── ui/                   # UI 主题
 │   ├── modern-theme.css    # 现代主题
-│   ├── enhanced-theme.css # 增强主题
-│   ├── admin-marix.html    # 管理后台
+│   ├── enhanced-theme.css  # 增强主题
+│   ├── admin-marix.html     # 管理后台
 │   ├── monitor.html        # 监控面板
-│   └── login.html          # 登录页面
+│   └── login.html           # 登录页面
 ├── sync/                 # 同步客户端
-│   ├── webdav-sync.js     # WebDAV 同步
-│   ├── sync-panel.js      # 同步面板
-│   ├── advanced-sync.js   # 高级功能
-│   ├── config-generator.js # 配置生成
+│   ├── webdav-sync.js      # WebDAV 同步
+│   ├── sync-panel.js       # 同步面板
+│   ├── advanced-sync.js    # 高级功能
+│   ├── code-editor.js      # 代码编辑器
+│   ├── file-manager.js     # 文件管理器
+│   ├── enhanced-file-manager.js  # 增强文件管理器
+│   ├── database-client.js  # 数据库客户端
+│   ├── network-tools.js    # 网络诊断工具
+│   ├── rdp-client.js       # RDP 远程桌面
+│   ├── vnc-client.js       # VNC 远程桌面
+│   ├── lan-tools.js        # 局域网工具
+│   ├── framework-installer.js  # 框架安装器
 │   └── tester.js           # 测试工具
 └── docs/                 # 文档
     ├── API.md             # API 完整文档
-    ├── INSTALLATION.md    # 安装指南
+    ├── SECURITY.md        # 安全加固指南
+    ├── TROUBLESHOOTING.md # 故障排查指南
+    ├── COMPARISON.md      # 项目对比
     └── ...
-```
-
-## 新增功能 (v1.5.0)
-
-### API 端点
-| 方法 | 路径 | 描述 |
-|------|------|------|
-| GET | `/api/export` | 导出用户数据 |
-| POST | `/api/import` | 导入用户数据 |
-| GET | `/api/admin/logs` | 操作日志 |
-| GET | `/api/admin/stats` | 服务器统计 |
-
-### 管理脚本
-```bash
-# 备份数据
-./scripts/backup-sync.sh backup admin password
-
-# 恢复数据
-./scripts/backup-sync.sh restore backup.json admin password
-
-# 健康检查
-./scripts/health-check.sh
-```
-
-## API 文档
-
-### 认证
-
-```bash
-# 注册用户
-curl -X POST http://82.158.225.97:3000/api/register \
-  -H 'Content-Type: application/json' \
-  -d '{"userId":"your-user","password":"your-pass"}'
-
-# 登录
-curl -X POST http://82.158.225.97:3000/api/login \
-  -H 'Content-Type: application/json' \
-  -d '{"userId":"your-user","password":"your-pass"}'
-```
-
-### 同步
-
-```bash
-# 获取数据
-curl http://82.158.225.97:3000/api/sync \
-  -H 'Authorization: Bearer YOUR_TOKEN'
-
-# 保存数据
-curl -X PUT http://82.158.225.97:3000/api/sync \
-  -H 'Authorization: Bearer YOUR_TOKEN' \
-  -H 'Content-Type: application/json' \
-  -d '{"version":1,"data":{...}}'
-```
-
-### 导出/导入
-
-```bash
-# 导出
-curl http://82.158.225.97:3000/api/export \
-  -H 'Authorization: Bearer YOUR_TOKEN' \
-  -o backup.json
-
-# 导入 (覆盖)
-curl -X POST http://82.158.225.97:3000/api/import \
-  -H 'Authorization: Bearer YOUR_TOKEN' \
-  -H 'Content-Type: application/json' \
-  -d '{"data":{...},"merge":false}'
-
-# 导入 (合并)
-curl -X POST http://82.158.225.97:3000/api/import \
-  -H 'Authorization: Bearer YOUR_TOKEN' \
-  -H 'Content-Type: application/json' \
-  -d '{"data":{...},"merge":true}'
-```
-
-### 监控
-
-```bash
-# 服务状态
-curl http://82.158.225.97:3000/health
-
-# 服务器信息
-curl http://82.158.225.97:3000/api/info
 ```
 
 ## 已部署服务器
@@ -186,9 +107,10 @@ curl http://82.158.225.97:3000/api/info
 ## 技术栈
 
 - **后端**: Node.js 22, Express, JWT
-- **前端**: React, Ant Design
+- **前端**: React, Ant Design, xterm.js
 - **存储**: JSON 文件 (可扩展 SQLite)
 - **部署**: PM2, Nginx
+- **安全**: Argon2id, AES-256-GCM
 
 ## 许可证
 
