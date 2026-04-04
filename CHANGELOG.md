@@ -8,13 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.0] - 2026-04-04
 
 ### 新增
-- RDP 远程桌面客户端 (`sync/rdp-client.js`) - Windows/Linux 远程桌面
-- VNC 远程桌面客户端 (`sync/vnc-client.js`) - Linux/macOS 远程桌面
+- RDP 远程桌面客户端 (sync/rdp-client.js) - Windows/Linux 远程桌面
+- VNC 远程桌面客户端 (sync/vnc-client.js) - Linux/macOS 远程桌面
 - 支持键盘/鼠标事件、剪贴板、全屏模式
 
-### 新增 (之前遗漏)
-- 项目对比分析文档 (`docs/COMPARISON.md`, `docs/COMPARISON_DETAIL.md`, `docs/COMPARISON_FINAL.md`)
-- 详细功能对比 electerm-optimization vs Marix
+### 新增
+- 项目对比分析文档 (docs/COMPARISON.md, COMPARISON_DETAIL.md, COMPARISON_FINAL.md)
 
 ---
 
