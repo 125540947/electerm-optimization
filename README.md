@@ -99,10 +99,14 @@ electerm-optimization/
 
 ## 已部署服务器
 
-- **Web**: http://82.158.225.97
-- **Sync**: http://82.158.225.97:3000
-- **管理后台**: http://82.158.225.97/admin-marix.html
-- **监控面板**: http://82.158.225.97/monitor.html
+> 可自行部署到任意服务器
+
+```bash
+git clone https://github.com/125540947/electerm-optimization.git
+cd electerm-optimization/scripts
+chmod +x deploy-enhanced.sh
+./deploy-enhanced.sh
+```
 
 ## 技术栈
 
