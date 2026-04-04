@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # 同步服务
   electerm-sync:
     image: node:22-alpine
     container_name: electerm-sync-server
@@ -14,30 +15,73 @@ services:
       - PORT=3000
       - DATA_DIR=/app/data
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - RATE_LIMIT=100
+      - CACHE_TTL=60000
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/sync"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - electerm-net
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Web 服务 (可选)
+  electerm-web:
+    image: node:22-alpine
+    container_name: electerm-web-server
+    restart: unless-stopped
+    ports:
+      - "5577:5577"
+    volumes:
+      - ./electerm-data:/opt/electerm-data
+    environment:
+      - PORT=5577
+      - SERVER_SECRET=${SERVER_SECRET:-change-me-in-production}
+      - DB_PATH=/opt/electerm-data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5577"]
       interval: 30s
       timeout: 10s
       retries: 3
     networks:
       - electerm-net
 
-  # 可选: 反向代理 (需要配置 SSL 证书)
-  # nginx-proxy:
-  #   image: nginx:alpine
-  #   container_name: electerm-sync-proxy
-  #   restart: unless-stopped
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
-  #     - ./ssl:/etc/nginx/ssl:ro
-  #   depends_on:
-  #     - electerm-sync
-  #   networks:
-  #     - electerm-net
+  # Nginx 反向代理 (推荐)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: electerm-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs:/var/log/nginx
+    depends_on:
+      - electerm-sync
+      - electerm-web
+    networks:
+      - electerm-net
 
 networks:
   electerm-net:
     driver: bridge
+
+# 使用说明:
+# 1. 创建 .env 文件设置密钥
+# 2. 配置 nginx.conf (参考下面的示例)
+# 3. 运行 docker-compose up -d
+#
+# 示例 .env 文件:
+# JWT_SECRET=your-secure-jwt-secret-key-min-32-chars
+# SERVER_SECRET=your-secure-server-secret
+#
+# 生成密钥:
+# openssl rand -hex 32
