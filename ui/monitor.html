@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>electerm-sync 监控面板</title>
+  <link rel="stylesheet" href="enhanced-theme.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: var(--bg-primary); }
+    .dashboard { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; }
+    .stat-value { font-size: 32px; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+    .section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; }
+    .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); }
+    .log-list { max-height: 300px; overflow-y: auto; font-family: var(--font-mono); font-size: 12px; }
+    .log-item { padding: 8px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+    .log-item:last-child { border-bottom: none; }
+    .status-ok { color: var(--accent-green); }
+    .status-error { color: var(--accent-red); }
+    .status-warn { color: var(--accent-yellow); }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h1 style="margin-bottom: 24px;">📊 electerm-sync 监控面板</h1>
+    
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-value" id="statVersion">-</div>
+        <div class="stat-label">服务器版本</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statUsers">-</div>
+        <div class="stat-label">用户数量</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statUptime">-</div>
+        <div class="stat-label">运行时间</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statMemory">-</div>
+        <div class="stat-label">内存使用</div>
+      </div>
+    </div>
+    
+    <!-- 服务状态 -->
+    <div class="section">
+      <div class="section-title">🔌 服务状态</div>
+      <div id="serviceStatus">
+        <div class="log-item"><i class="fas fa-spinner fa-spin"></i> 正在检查...</div>
+      </div>
+    </div>
+    
+    <!-- 功能支持 -->
+    <div class="section">
+      <div class="section-title">⚡ 功能支持</div>
+      <div id="features" class="log-list"></div>
+    </div>
+    
+    <!-- 最近操作 -->
+    <div class="section">
+      <div class="section-title">📝 最近操作</div>
+      <div class="log-list" id="recentLogs">
+        <div class="log-item">等待数据...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://82.158.225.97:3000';
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = 'czfkKUGS9741';
+    
+    async function checkService() {
+      const statusEl = document.getElementById('serviceStatus');
+      try {
+        const [healthRes, infoRes] = await Promise.all([
+          fetch(`${API}/health`),
+          fetch(`${API}/api/info`)
+        ]);
+        
+        const health = await healthRes.json();
+        const info = await infoRes.json();
+        
+        document.getElementById('statVersion').textContent = info.version || '-';
+        document.getElementById('statUsers').textContent = info.users || 0;
+        document.getElementById('statUptime').textContent = formatUptime(health.uptime);
+        document.getElementById('statMemory').textContent = formatMemory(health.memory);
+        
+        // 功能列表
+        const featuresEl = document.getElementById('features');
+        const features = (info.features || []).map(f => {
+          const icons = { sync: '🔄', export: '📤', import: '📥', history: '📜' };
+          return `<div class="log-item"><i class="${icons[f] || '✨'}"></i> ${f}</div>`;
+        }).join('');
+        featuresEl.innerHTML = features || '<div class="log-item">无</div>';
+        
+        statusEl.innerHTML = `
+          <div class="log-item status-ok"><i class="fas fa-check-circle"></i> 服务正常运行</div>
+          <div class="log-item">服务器时间: ${new Date(health.timestamp).toLocaleString()}</div>
+        `;
+      } catch (e) {
+        statusEl.innerHTML = `<div class="log-item status-error"><i class="fas fa-times-circle"></i> 服务异常: ${e.message}</div>`;
+      }
+    }
+    
+    function formatUptime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
+    
+    function formatMemory(mem) {
+      if (!mem) return '-';
+      const mb = (mem.rss || 0) / 1024 / 1024;
+      return mb.toFixed(1) + ' MB';
+    }
+    
+    // 初始化
+    checkService();
+    setInterval(checkService, 30000); // 每30秒刷新
+  </script>
+</body>
+</html>
