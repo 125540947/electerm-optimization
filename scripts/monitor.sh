@@ -2,7 +2,7 @@
 # 服务器监控脚本
 # 添加到 crontab: */5 * * * * /opt/scripts/monitor.sh
 
-SERVER_IP="82.158.225.97"
+SERVER_IP="${SERVER_IP}"
 SSH_USER="root"
 SSH_PASS="czfkKUGS9741"
 ALERT_EMAIL="admin@example.com"

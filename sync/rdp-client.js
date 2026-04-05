@@ -28,7 +28,8 @@ class RDPClient {
 
   // 连接到 RDP 服务器 (需要服务器端 WebSocket 代理)
   async connect() {
-    const wsUrl = `ws://82.158.225.97:3000/api/rdp/connect`;
+    const host = this.options.host || process.env.SERVER_HOST || 'localhost';
+    const wsUrl = `ws://${host}:3000/api/rdp/connect`;
     
     try {
       this.ws = new WebSocket(wsUrl);

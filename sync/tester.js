@@ -4,7 +4,7 @@
  */
 
 class SyncTester {
-  constructor(baseUrl = 'http://82.158.225.97:3000') {
+  constructor(baseUrl = process.env.API_BASE_URL || 'http://localhost:3000') {
     this.baseUrl = baseUrl;
     this.token = null;
     this.userId = null;

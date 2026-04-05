@@ -14,7 +14,7 @@ class DatabaseClient {
       password: config.password || '',
       database: config.database || ''
     };
-    this.apiBase = 'http://82.158.225.97:3000';
+    this.apiBase = process.env.API_BASE_URL || 'http://localhost:3000';
   }
 
   getDefaultPort(type) {

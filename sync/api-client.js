@@ -5,7 +5,7 @@
 
 class ElectermAPI {
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || 'http://82.158.225.97:3000';
+    this.baseUrl = options.baseUrl || process.env.API_BASE_URL || 'http://localhost:3000';
     this.token = options.token || localStorage.getItem('electerm_token');
     this.userId = options.userId || localStorage.getItem('electerm_user');
   }

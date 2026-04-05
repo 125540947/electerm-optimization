@@ -26,7 +26,8 @@ class VNCClient {
   connect() {
     // 使用 WebSocket 连接到 VNC 代理
     // 注意: 需要服务器端配置 noVNC websockify 代理
-    const wsUrl = `ws://82.158.225.97:3000/api/vnc?host=${this.options.host}&port=${this.options.port}`;
+    const host = this.options.host || process.env.SERVER_HOST || 'localhost';
+    const wsUrl = `ws://${host}:3000/api/vnc?host=${this.options.host}&port=${this.options.port}`;
     
     try {
       this.rfb = new RFB(document.getElementById('vncContainer'), wsUrl, {

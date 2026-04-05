@@ -5,7 +5,7 @@
 set -e
 
 # 配置
-SERVER="82.158.225.97"
+SERVER="${SERVER_IP}"
 PORT="3000"
 BACKUP_DIR="/opt/electerm-sync/backups"
 DATE=$(date +%Y%m%d_%H%M%S)

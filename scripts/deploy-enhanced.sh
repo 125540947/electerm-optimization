@@ -5,7 +5,7 @@
 set -e
 
 # ===== 配置 =====
-SERVER_IP="82.158.225.97"
+SERVER_IP="${SERVER_IP}"
 SSH_PORT="22"
 SSH_USER="root"
 SSH_PASS="czfkKUGS9741"
