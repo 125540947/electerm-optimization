@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多服务器集群管理面板</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; }
+        
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { opacity: 0.8; font-size: 14px; }
+        
+        .toolbar { background: white; padding: 15px 20px; border-bottom: 1px solid #e1e4e8; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-danger { background: #f56565; color: white; }
+        .btn-secondary { background: #718096; color: white; }
+        
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
+        .stat-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .stat-card h3 { color: #718096; font-size: 14px; margin-bottom: 10px; }
+        .stat-card .value { font-size: 32px; font-weight: bold; color: #2d3748; }
+        .stat-card .value.success { color: #48bb78; }
+        .stat-card .value.warning { color: #ed8936; }
+        .stat-card .value.danger { color: #f56565; }
+        
+        .content { padding: 20px; }
+        
+        .server-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .server-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .server-header { padding: 15px 20px; background: #f7fafc; border-bottom: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; }
+        .server-header h3 { font-size: 16px; color: #2d3748; }
+        .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .status-online { background: #c6f6d5; color: #276749; }
+        .status-offline { background: #fed7d7; color: #9b2c2c; }
+        .status-warning { background: #feebc8; color: #9c4221; }
+        
+        .server-body { padding: 20px; }
+        .server-info { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-item label { font-size: 12px; color: #718096; margin-bottom: 4px; }
+        .info-item span { font-size: 14px; color: #2d3748; }
+        
+        .server-actions { padding: 15px 20px; background: #f7fafc; border-top: 1px solid #e1e4e8; display: flex; gap: 10px; }
+        
+        .batch-actions { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: none; }
+        .batch-actions.show { display: block; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e1e4e8; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 18px; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; }
+        .modal-body { padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 14px; color: #4a5568; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #e1e4e8; border-radius: 6px; font-size: 14px; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid #e1e4e8; display: flex; justify-content: flex-end; gap: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e1e4e8; }
+        th { background: #f7fafc; font-weight: 600; color: #4a5568; }
+        .checkbox { width: 20px; height: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>多服务器集群管理面板</h1>
+        <p>批量管理多个服务器，实时监控状态</p>
+    </div>
+    
+    <div class="toolbar">
+        <button class="btn btn-primary" onclick="showAddModal()">+ 添加服务器</button>
+        <button class="btn btn-success" onclick="refreshAll()">刷新全部</button>
+        <button class="btn btn-secondary" onclick="batchAction('start')">批量启动</button>
+        <button class="btn btn-secondary" onclick="batchAction('stop')">批量停止</button>
+        <button class="btn btn-danger" onclick="batchAction('restart')">批量重启</button>
+        <button class="btn btn-secondary" onclick="exportConfig()">导出配置</button>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <h3>服务器总数</h3>
+            <div class="value" id="totalServers">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>在线</h3>
+            <div class="value success" id="onlineServers">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>离线</h3>
+            <div class="value danger" id="offlineServers">0</div>
+        </div>
+        <div class="stat-card">
+            <h3>警告</h3>
+            <div class="value warning" id="warningServers">0</div>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="server-grid" id="serverGrid"></div>
+    </div>
+    
+    <!-- 添加服务器弹窗 -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>添加服务器</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>服务器名称</label>
+                    <input type="text" id="serverName" placeholder="例如: Web服务器1">
+                </div>
+                <div class="form-group">
+                    <label>IP地址</label>
+                    <input type="text" id="serverIP" placeholder="例如: 192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label>端口</label>
+                    <input type="number" id="serverPort" value="22" placeholder="SSH端口">
+                </div>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="serverUser" placeholder="SSH用户名">
+                </div>
+                <div class="form-group">
+                    <label>密码/密钥</label>
+                    <input type="password" id="serverPass" placeholder="SSH密码或密钥路径">
+                </div>
+                <div class="form-group">
+                    <label>分组</label>
+                    <select id="serverGroup">
+                        <option value="web">Web服务器</option>
+                        <option value="db">数据库服务器</option>
+                        <option value="storage">存储服务器</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="addServer()">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟服务器数据
+        let servers = [
+            { id: 1, name: 'Web服务器-1', ip: '192.168.1.10', port: 22, user: 'root', group: 'web', status: 'online', cpu: 45, memory: 62, disk: 38 },
+            { id: 2, name: 'Web服务器-2', ip: '192.168.1.11', port: 22, user: 'root', group: 'web', status: 'online', cpu: 38, memory: 55, disk: 42 },
+            { id: 3, name: '数据库主库', ip: '192.168.1.20', port: 22, user: 'root', group: 'db', status: 'online', cpu: 72, memory: 85, disk: 65 },
+            { id: 4, name: '数据库从库', ip: '192.168.1.21', port: 22, user: 'root', group: 'db', status: 'warning', cpu: 88, memory: 78, disk: 55 },
+            { id: 5, name: '存储服务器', ip: '192.168.1.30', port: 22, user: 'root', group: 'storage', status: 'offline', cpu: 0, memory: 0, disk: 0 },
+            { id: 6, name: '缓存服务器', ip: '192.168.1.40', port: 22, user: 'root', group: 'other', status: 'online', cpu: 25, memory: 45, disk: 20 }
+        ];
+        
+        function renderServers() {
+            const grid = document.getElementById('serverGrid');
+            grid.innerHTML = servers.map(s => `
+                <div class="server-card">
+                    <div class="server-header">
+                        <h3>${s.name}</h3>
+                        <span class="status-badge status-${s.status}">${s.status === 'online' ? '在线' : s.status === 'offline' ? '离线' : '警告'}</span>
+                    </div>
+                    <div class="server-body">
+                        <div class="server-info">
+                            <div class="info-item">
+                                <label>IP地址</label>
+                                <span>${s.ip}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>分组</label>
+                                <span>${s.group === 'web' ? 'Web服务器' : s.group === 'db' ? '数据库' : s.group === 'storage' ? '存储' : '其他'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>CPU</label>
+                                <span>${s.cpu}%</span>
+                            </div>
+                            <div class="info-item">
+                                <label>内存</label>
+                                <span>${s.memory}%</span>
+                            </div>
+                            <div class="info-item">
+                                <label>磁盘</label>
+                                <span>${s.disk}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="server-actions">
+                        <button class="btn btn-primary" onclick="sshConnect(${s.id})">SSH</button>
+                        <button class="btn btn-secondary" onclick="viewDetails(${s.id})">详情</button>
+                        <button class="btn btn-success" onclick="startServer(${s.id})">启动</button>
+                        <button class="btn btn-danger" onclick="stopServer(${s.id})">停止</button>
+                    </div>
+                </div>
+            ``).join('');
+            
+            updateStats();
+        }
+        
+        function updateStats() {
+            document.getElementById('totalServers').textContent = servers.length;
+            document.getElementById('onlineServers').textContent = servers.filter(s => s.status === 'online').length;
+            document.getElementById('offlineServers').textContent = servers.filter(s => s.status === 'offline').length;
+            document.getElementById('warningServers').textContent = servers.filter(s => s.status === 'warning').length;
+        }
+        
+        function showAddModal() { document.getElementById('addModal').classList.add('show'); }
+        function closeModal() { document.getElementById('addModal').classList.remove('show'); }
+        
+        function addServer() {
+            const name = document.getElementById('serverName').value;
+            const ip = document.getElementById('serverIP').value;
+            if (!name || !ip) { alert('请填写服务器名称和IP'); return; }
+            
+            servers.push({
+                id: servers.length + 1,
+                name, ip,
+                port: parseInt(document.getElementById('serverPort').value),
+                user: document.getElementById('serverUser').value,
+                group: document.getElementById('serverGroup').value,
+                status: 'offline', cpu: 0, memory: 0, disk: 0
+            });
+            
+            renderServers();
+            closeModal();
+        }
+        
+        function sshConnect(id) { alert('SSH连接功能需要安装终端组件'); }
+        function viewDetails(id) { alert('查看详情功能'); }
+        function startServer(id) {
+            const s = servers.find(s => s.id === id);
+            if (s) { s.status = 'online'; s.cpu = 30; s.memory = 40; s.disk = 30; renderServers(); }
+        }
+        function stopServer(id) {
+            const s = servers.find(s => s.id === id);
+            if (s) { s.status = 'offline'; s.cpu = 0; s.memory = 0; s.disk = 0; renderServers(); }
+        }
+        function refreshAll() { renderServers(); alert('已刷新所有服务器状态'); }
+        function batchAction(action) { alert('批量' + action + '功能'); }
+        function exportConfig() { alert('导出配置'); }
+        
+        renderServers();
+    </script>
+</body>
+</html>
