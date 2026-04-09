@@ -1,65 +1,91 @@
 # Electerm Web UI & Sync 优化
 
-## 优化文件结构
+## 项目结构
 
 ```
 electerm-optimization/
 ├── README.md                    # 项目说明
 ├── CONFIG.md                    # 配置指南
+├── CHANGELOG.md                 # 更新日志
 ├── docker-compose.yml           # Docker 部署
-├── scripts/
-│   └── install-sync-server.sh   # VPS 一键安装脚本
-├── ui/
-│   └── modern-theme.css         # 现代 UI 主题
-└── sync/
-    ├── webdav-sync.js            # WebDAV 同步模块
-    └── sync-panel.js             # 同步面板 UI
+├── docker-compose-full.yml      # 完整部署
+├── nginx.conf                   # Nginx 配置
+├── Dockerfile                   # Docker 镜像
+│
+├── docs/                        # 文档 (14 files)
+│   ├── README.md               # 文档索引
+│   ├── COMPARISON_FINAL.md     # 功能对比
+│   └── ...
+│
+├── scripts/                     # 自动化脚本 (9 files)
+│   ├── deploy-enhanced.sh      # 完整部署
+│   ├── install-sync-server.sh  # 一键安装
+│   ├── health-check.sh         # 健康检查
+│   └── ...
+│
+├── server/                      # 服务器模块 (11 files)
+│   ├── server-v1.5.js          # 主版本
+│   ├── monitoring.js            # 监控
+│   └── ...
+│
+├── sync/                       # 同步模块 (21 files)
+│   ├── enhanced-file-manager.js
+│   ├── sync-panel.js
+│   ├── webdav-sync.js
+│   └── ...
+│
+├── ui/                         # 前端界面 (10 files)
+│   ├── cluster-manager.html
+│   ├── modern-theme.css
+│   └── ...
+│
+└── patch/                      # 补丁
+    └── zh-cn-patch.js
 ```
 
-## 优化内容总结
+## 核心功能
 
-### 1️⃣ WebDAV 同步支持 ✅
-- 支持 Nextcloud、坚果云、阿里云盘等
+### ✅ WebDAV 同步
+- 支持 Nextcloud、坚果云、阿里云盘
 - 双向同步、冲突处理
 - 自动同步定时任务
 
-### 2️⃣ 自定义服务器同步 ✅
+### ✅ 自建服务器
 - 轻量级 Node.js 服务
-- 支持自建 VPS
 - Basic Auth + JWT 认证
 - 一键安装脚本
 
-### 3️⃣ UI 优化 ✅
-- Catppuccin Mocha 风格配色
+### ✅ UI 优化
+- Catppuccin Mocha 风格
 - CSS Variables 动态主题
-- 响应式布局 (移动端适配)
-- 深色/浅色模式切换
-- 现代化组件样式
+- 响应式布局 (移动端)
 
-## 使用方式
+### ✅ 远程连接
+- RDP 远程桌面
+- VNC 远程桌面
+- SSH 终端
+- 端口转发
 
-### 部署同步服务器 (VPS)
-```bash
-# 一键安装
-curl -o- https://raw.githubusercontent.com/your-repo/electerm-optimization/main/scripts/install-sync-server.sh | bash
-```
+### ✅ 工具集
+- 框架安装器 (Laravel, WP, etc)
+- 网络工具
+- 局域网传输
+- 数据库客户端
+- Docker 管理
+
+## 快速开始
 
 ### Docker 部署
 ```bash
 docker-compose up -d
 ```
 
-### UI 优化
-```html
-<link rel="stylesheet" href="ui/modern-theme.css">
+### VPS 一键安装
+```bash
+curl -o- https://raw.githubusercontent.com/your-repo/electerm-optimization/main/scripts/install-sync-server.sh | bash
 ```
 
-### 集成同步面板
+### 使用同步面板
 ```javascript
 const syncPanel = new SyncPanel(container, options);
 ```
-
----
-
-所有文件已保存到 `electerm-optimization/` 目录。
-需要我提交到 GitHub 或做其他修改吗？
