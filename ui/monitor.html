@@ -6,26 +6,37 @@
   <title>electerm-sync 监控面板</title>
   <link rel="stylesheet" href="enhanced-theme.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     body { background: var(--bg-primary); }
-    .dashboard { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center; }
-    .stat-value { font-size: 32px; font-weight: 700; color: var(--accent); }
-    .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+    .dashboard { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header h1 { margin: 0; }
+    .refresh-btn { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-box { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
     .section { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; }
     .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); }
-    .log-list { max-height: 300px; overflow-y: auto; font-family: var(--font-mono); font-size: 12px; }
-    .log-item { padding: 8px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+    .chart-container { position: relative; height: 250px; }
+    .log-list { max-height: 200px; overflow-y: auto; font-family: var(--font-mono); font-size: 12px; }
+    .log-item { padding: 6px 8px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
     .log-item:last-child { border-bottom: none; }
     .status-ok { color: var(--accent-green); }
     .status-error { color: var(--accent-red); }
-    .status-warn { color: var(--accent-yellow); }
+    .progress-bar { height: 8px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+    .progress-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
   </style>
 </head>
 <body>
   <div class="dashboard">
-    <h1 style="margin-bottom: 24px;">📊 electerm-sync 监控面板</h1>
+    <div class="header">
+      <h1>📊 electerm-sync 监控面板</h1>
+      <button class="refresh-btn" onclick="loadAll()"><i class="fas fa-refresh"></i> 刷新</button>
+    </div>
     
     <!-- 统计卡片 -->
     <div class="stats-grid">
@@ -34,16 +45,40 @@
         <div class="stat-label">服务器版本</div>
       </div>
       <div class="stat-box">
-        <div class="stat-value" id="statUsers">-</div>
-        <div class="stat-label">用户数量</div>
-      </div>
-      <div class="stat-box">
         <div class="stat-value" id="statUptime">-</div>
         <div class="stat-label">运行时间</div>
       </div>
       <div class="stat-box">
         <div class="stat-value" id="statMemory">-</div>
-        <div class="stat-label">内存使用</div>
+        <div class="stat-label">内存使用 (RSS)</div>
+        <div class="progress-bar"><div class="progress-fill" id="memBar" style="width:0%"></div></div>
+        <div class="progress-label" id="memLabel">0 / 0 MB</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statHeap">-</div>
+        <div class="stat-label">堆内存使用</div>
+        <div class="progress-bar"><div class="progress-fill" id="heapBar" style="width:0%"></div></div>
+        <div class="progress-label" id="heapLabel">0%</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="statRequests">-</div>
+        <div class="stat-label">请求数</div>
+      </div>
+    </div>
+    
+    <!-- 图表区域 -->
+    <div class="charts-grid">
+      <div class="section">
+        <div class="section-title">💾 内存使用趋势</div>
+        <div class="chart-container">
+          <canvas id="memoryChart"></canvas>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">📈 堆内存趋势</div>
+        <div class="chart-container">
+          <canvas id="heapChart"></canvas>
+        </div>
       </div>
     </div>
     
@@ -54,26 +89,92 @@
         <div class="log-item"><i class="fas fa-spinner fa-spin"></i> 正在检查...</div>
       </div>
     </div>
-    
-    <!-- 功能支持 -->
-    <div class="section">
-      <div class="section-title">⚡ 功能支持</div>
-      <div id="features" class="log-list"></div>
-    </div>
-    
-    <!-- 最近操作 -->
-    <div class="section">
-      <div class="section-title">📝 最近操作</div>
-      <div class="log-list" id="recentLogs">
-        <div class="log-item">等待数据...</div>
-      </div>
-    </div>
   </div>
 
   <script>
     const API = 'http://82.158.225.97:3000';
-    const ADMIN_USER = 'admin';
-    const ADMIN_PASS = 'czfkKUGS9741';
+    let memoryChart, heapChart;
+    let metricsHistory = { memory: [], heap: [] };
+    
+    // 初始化图表
+    function initCharts() {
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        scales: {
+          x: { display: true, ticks: { maxTicksLimit: 10 } },
+          y: { beginAtZero: true }
+        },
+        plugins: { legend: { display: true, position: 'top' } }
+      };
+      
+      memoryChart = new Chart(document.getElementById('memoryChart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'RSS (MB)', borderColor: '#3498db', data: [], tension: 0.3, fill: false },
+            { label: 'Heap Used (MB)', borderColor: '#2ecc71', data: [], tension: 0.3, fill: false }
+          ]
+        },
+        options: chartOptions
+      });
+      
+      heapChart = new Chart(document.getElementById('heapChart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'Heap Used (MB)', borderColor: '#e74c3c', data: [], tension: 0.3, fill: true },
+            { label: 'Heap Total (MB)', borderColor: '#9b59b6', data: [], tension: 0.3, fill: false }
+          ]
+        },
+        options: chartOptions
+      });
+    }
+    
+    async function loadMetrics() {
+      try {
+        const res = await fetch(`${API}/api/metrics`);
+        const data = await res.json();
+        
+        // 更新统计卡片
+        document.getElementById('statMemory').textContent = data.memory.rssMB + ' MB';
+        document.getElementById('statHeap').textContent = data.memory.heapPercent + '%';
+        document.getElementById('statRequests').textContent = data.requests || 0;
+        
+        // 进度条
+        const heapUsed = parseFloat(data.memory.heapUsed);
+        const heapTotal = parseFloat(data.memory.heapTotal);
+        document.getElementById('heapBar').style.width = data.memory.heapPercent + '%';
+        document.getElementById('heapLabel').textContent = `${heapUsed} / ${heapTotal} MB`;
+        
+        // 更新图表数据
+        const time = new Date().toLocaleTimeString();
+        metricsHistory.memory.push({ time, rss: parseFloat(data.memory.rssMB), heap: heapUsed });
+        metricsHistory.heap.push({ time, used: heapUsed, total: parseFloat(data.memory.heapTotal) });
+        
+        // 保留最近30个点
+        if (metricsHistory.memory.length > 30) metricsHistory.memory.shift();
+        if (metricsHistory.heap.length > 30) metricsHistory.heap.shift();
+        
+        // 更新图表
+        const labels = metricsHistory.memory.map(m => m.time);
+        memoryChart.data.labels = labels;
+        memoryChart.data.datasets[0].data = metricsHistory.memory.map(m => m.rss);
+        memoryChart.data.datasets[1].data = metricsHistory.memory.map(m => m.heap);
+        memoryChart.update('none');
+        
+        heapChart.data.labels = labels;
+        heapChart.data.datasets[0].data = metricsHistory.heap.map(h => h.used);
+        heapChart.data.datasets[1].data = metricsHistory.heap.map(h => h.total);
+        heapChart.update('none');
+        
+      } catch (e) {
+        console.error('Metrics error:', e);
+      }
+    }
     
     async function checkService() {
       const statusEl = document.getElementById('serviceStatus');
@@ -87,17 +188,7 @@
         const info = await infoRes.json();
         
         document.getElementById('statVersion').textContent = info.version || '-';
-        document.getElementById('statUsers').textContent = info.users || 0;
         document.getElementById('statUptime').textContent = formatUptime(health.uptime);
-        document.getElementById('statMemory').textContent = formatMemory(health.memory);
-        
-        // 功能列表
-        const featuresEl = document.getElementById('features');
-        const features = (info.features || []).map(f => {
-          const icons = { sync: '🔄', export: '📤', import: '📥', history: '📜' };
-          return `<div class="log-item"><i class="${icons[f] || '✨'}"></i> ${f}</div>`;
-        }).join('');
-        featuresEl.innerHTML = features || '<div class="log-item">无</div>';
         
         statusEl.innerHTML = `
           <div class="log-item status-ok"><i class="fas fa-check-circle"></i> 服务正常运行</div>
@@ -109,20 +200,23 @@
     }
     
     function formatUptime(seconds) {
-      const h = Math.floor(seconds / 3600);
+      const d = Math.floor(seconds / 86400);
+      const h = Math.floor((seconds % 86400) / 3600);
       const m = Math.floor((seconds % 3600) / 60);
-      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+      if (d > 0) return `${d}d ${h}h`;
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}m`;
     }
     
-    function formatMemory(mem) {
-      if (!mem) return '-';
-      const mb = (mem.rss || 0) / 1024 / 1024;
-      return mb.toFixed(1) + ' MB';
+    async function loadAll() {
+      await checkService();
+      await loadMetrics();
     }
     
     // 初始化
-    checkService();
-    setInterval(checkService, 30000); // 每30秒刷新
+    initCharts();
+    loadAll();
+    setInterval(loadMetrics, 5000); // 每5秒更新图表
   </script>
 </body>
 </html>

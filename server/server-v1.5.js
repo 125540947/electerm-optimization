@@ -563,12 +563,115 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// ==================== 指标收集系统 ====================
+const metricsHistory = {
+  cpu: [],
+  memory: [],
+  requests: [],
+  connections: []
+};
+const MAX_HISTORY = 60; // 保留最近60个数据点
+
+function collectMetrics() {
+  const mem = process.memoryUsage();
+  const cpu = process.cpuUsage();
+  
+  const point = {
+    timestamp: Date.now(),
+    memory: {
+      rss: mem.rss,
+      heapUsed: mem.heapUsed,
+      heapTotal: mem.heapTotal,
+      external: mem.external
+    },
+    cpu: {
+      user: cpu.user,
+      system: cpu.system
+    },
+    eventLoop: {
+      lag: 0 // 简化处理
+    }
+  };
+  
+  // 添加到历史记录
+  metricsHistory.memory.push(point);
+  metricsHistory.cpu.push(point);
+  
+  // 限制历史长度
+  if (metricsHistory.memory.length > MAX_HISTORY) {
+    metricsHistory.memory.shift();
+    metricsHistory.cpu.shift();
+  }
+}
+
+// 每5秒收集一次指标
+setInterval(collectMetrics, 5000);
+collectMetrics(); // 初始收集
+
+// 请求计数
+let requestCount = 0;
+app.use((req, res, next) => {
+  requestCount++;
+  next();
+});
+
+// 指标API
+app.get('/api/metrics', (req, res) => {
+  const now = Date.now();
+  
+  // 清理旧请求数据
+  if (metricsHistory.requests.length > 0) {
+    const lastTime = metricsHistory.requests[metricsHistory.requests.length - 1]?.timestamp || 0;
+    if (now - lastTime > 60000) {
+      metricsHistory.requests = [];
+    }
+  }
+  
+  const currentMetrics = {
+    timestamp: now,
+    cpu: {
+      user: process.cpuUsage().user,
+      system: process.cpuUsage().system,
+      percent: 0 // 需要对比计算
+    },
+    memory: {
+      rss: process.memoryUsage().rss,
+      rssMB: (process.memoryUsage().rss / 1024 / 1024).toFixed(2),
+      heapUsed: (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2),
+      heapTotal: (process.memoryUsage().heapTotal / 1024 / 1024).toFixed(2),
+      heapPercent: ((process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100).toFixed(1)
+    },
+    uptime: process.uptime(),
+    requests: requestCount,
+    connections: 0
+  };
+  
+  res.json(currentMetrics);
+});
+
+// 指标历史API (图表数据)
+app.get('/api/metrics/history', (req, res) => {
+  res.json({
+    memory: metricsHistory.memory.map(m => ({
+      timestamp: m.timestamp,
+      rssMB: (m.memory.rss / 1024 / 1024).toFixed(2),
+      heapUsedMB: (m.memory.heapUsed / 1024 / 1024).toFixed(2)
+    })),
+    cpu: metricsHistory.cpu.map(c => ({
+      timestamp: c.timestamp,
+      user: c.cpu.user,
+      system: c.cpu.system
+    }))
+  });
+});
+
 // ==================== 启动 ====================
 app.listen(PORT, '0.0.0.0', () => {
   console.log('========================================');
   console.log('  Electerm Sync Server v1.5.0');
   console.log(`  Running on http://0.0.0.0:${PORT}`);
   console.log(`  Data directory: ${DATA_DIR}`);
+  console.log('  Metrics: /api/metrics');
   console.log('========================================');
 });
 
